@@ -1,0 +1,498 @@
+{
+    "kitoblar": [
+        {
+            "id": "1",
+            "nomi": "Tutqun",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/35"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/36"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/37"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/38"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/39"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/40"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/41"
+                },
+                {
+                    "nomi": "8-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/42"
+                },
+                {
+                    "nomi": "9-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/43"
+                },
+                {
+                    "nomi": "10-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/44"
+                },
+                {
+                    "nomi": "11-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/45"
+                },
+                {
+                    "nomi": "12-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/46"
+                },
+                {
+                    "nomi": "13-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/47"
+                },
+                {
+                    "nomi": "14-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/48"
+                },
+                {
+                    "nomi": "15-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/49"
+                },
+                {
+                    "nomi": "16-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/50"
+                },
+                {
+                    "nomi": "17-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/51"
+                },
+                {
+                    "nomi": "18-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/52"
+                }
+            ]
+        },
+        {
+            "id": "2",
+            "nomi": "Chunki Siz Muhammadsiz",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/4"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/5"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/6"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/7"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/8"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/9"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/10"
+                },
+                {
+                    "nomi": "8-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/11"
+                },
+                {
+                    "nomi": "9-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/12"
+                },
+                {
+                    "nomi": "10-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/13"
+                },
+                {
+                    "nomi": "11-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/14"
+                }
+            ]
+        },
+        {
+            "id": "3",
+            "nomi": "Rosululloh madrasalari",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/15"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/16"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/17"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/18"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/19"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/20"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/21"
+                },
+                {
+                    "nomi": "8-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/22"
+                },
+                {
+                    "nomi": "9-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/23"
+                },
+                {
+                    "nomi": "10-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/24"
+                },
+                {
+                    "nomi": "11-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/25"
+                },
+                {
+                    "nomi": "12-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/26"
+                },
+                {
+                    "nomi": "13-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/27"
+                },
+                {
+                    "nomi": "14-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/28"
+                },
+                {
+                    "nomi": "15-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/29"
+                },
+                {
+                    "nomi": "16-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/30"
+                },
+                {
+                    "nomi": "17-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/31"
+                },
+                {
+                    "nomi": "18-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/32"
+                }
+            ]
+        },
+        {
+            "id": "4",
+            "nomi": "Meni qalbimdan tingla",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/63"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/64"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/65"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/66"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/67"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/68"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/69"
+                },
+                {
+                    "nomi": "8-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/70"
+                }
+            ]
+        },
+        {
+            "id": "5",
+            "nomi": "Alvido Vatan",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/89"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/90"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/91"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/92"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/93"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/94"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/95"
+                },
+                {
+                    "nomi": "8-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/96"
+                },
+                {
+                    "nomi": "9-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/97"
+                },
+                {
+                    "nomi": "10-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/98"
+                },
+                {
+                    "nomi": "11-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/99"
+                }
+            ]
+        },
+        {
+            "id": "6",
+            "nomi": "Eng baxtli ayol",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/100"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/101"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/102"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/103"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/104"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/105"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/106"
+                }
+            ]
+        },
+        {
+            "id": "7",
+            "nomi": "Falastin",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/161"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/162"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/163"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/164"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/165"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/166"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/167"
+                },
+                {
+                    "nomi": "8-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/168"
+                },
+                {
+                    "nomi": "9-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/169"
+                },
+                {
+                    "nomi": "10-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/170"
+                },
+                {
+                    "nomi": "11-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/171"
+                },
+                {
+                    "nomi": "12-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/172"
+                },
+                {
+                    "nomi": "13-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/173"
+                },
+                {
+                    "nomi": "14-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/174"
+                },
+                {
+                    "nomi": "15-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/175"
+                },
+                {
+                    "nomi": "16-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/176"
+                },
+                {
+                    "nomi": "17-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/177"
+                },
+                {
+                    "nomi": "18-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/178"
+                }
+            ]
+        },
+        {
+            "id": "8",
+            "nomi": "Musulmon tadbirkor",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/133"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/134"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/135"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/136"
+                },
+                {
+                    "nomi": "5-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/137"
+                },
+                {
+                    "nomi": "6-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/138"
+                },
+                {
+                    "nomi": "7-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/139"
+                },
+                {
+                    "nomi": "8-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/140"
+                },
+                {
+                    "nomi": "9-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/141"
+                },
+                {
+                    "nomi": "10-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/142"
+                }
+            ]
+        },
+        {
+            "id": "9",
+            "nomi": "Duolar",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/tabriys_official/232"
+                }
+            ]
+        },
+        {
+            "id": "10",
+            "nomi": "Ey farzand",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/119"
+                },
+                {
+                    "nomi": "2-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/120"
+                },
+                {
+                    "nomi": "3-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/121"
+                },
+                {
+                    "nomi": "4-qism",
+                    "audio_url": "https://t.me/baza_qanot_tabriys/122"
+                }
+            ]
+        },
+        {
+            "id": "11",
+            "nomi": "Eng baxtli oila",
+            "qismlar": [
+                {
+                    "nomi": "1-qism",
+                    "audio_url": "https://t.me/audio_kitobxonam/1513"
+                }
+            ]
+        }
+    ]
+}
