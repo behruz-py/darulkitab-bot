@@ -91,7 +91,7 @@ async def admin_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     keyboard = [[InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home")]]
-    await query.edit_message_text("👤 Admin bilan bog‘lanish: @Tabriys_bot\n\n👩🏻‍💻Bot dasturchisi: @uygun_oglu",
+    await query.edit_message_text("👤 Admin bilan bog‘lanish: @Tabriys_bot\n\n🔈sahifamiz: @Tabriys_official,
                                   reply_markup=InlineKeyboardMarkup(keyboard))
 
 
