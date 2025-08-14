@@ -1,42 +1,61 @@
-import json
-import os
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, ConversationHandler
+from storage import add_feedback
 
-FEEDBACK_FILE = "data/feedback.json"
+ASK_FEEDBACK = 1
 
 
-async def show_last_feedbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# 💬 Fikr olishni boshlash
+async def ask_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    # Fayldan feedbacklar ro'yxatini yuklash
-    feedbacks = []
-    if os.path.exists(FEEDBACK_FILE):
-        with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
-            feedbacks = json.load(f)
-
-    # Fikrlar mavjud bo'lmasa
-    if not feedbacks:
-        text = "ℹ️ Hozircha hech qanday fikr bildirilmagan."
-    else:
-        text = "💬 So‘nggi 10 ta foydalanuvchi fikri:\n\n"
-        for fb in reversed(feedbacks[-10:]):
-            name = fb.get("name", "Nomaʼlum")
-            username = fb.get("username", "Nomaʼlum")
-            message = fb.get("text", "")
-
-            username_str = f"@{username}" if username != "Nomaʼlum" and username else "username: yo‘q"
-            text += f"<b>{name}</b> ({username_str}):\n{message}\n\n"
-
-    # Tugmalar
-    keyboard = [
-        [InlineKeyboardButton("🔙 Ortga", callback_data="admin_panel")],
-        [InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home")]
-    ]
+    keyboard = [[
+        InlineKeyboardButton("❌ Bekor qilish", callback_data="cancel_feedback"),
+        InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home"),
+    ]]
 
     await query.edit_message_text(
-        text=text,
-        parse_mode="HTML",
+        text=(
+            "💬 Fikringizni yozib yuboring. Taklif, tanqid yoki minnatdorchilik bo‘lishi mumkin.\n\n"
+            "✍️ Yozib bo‘lgach, yuboring.\n\n"
+            "👇 Pastdagi tugmalar orqali bekor qilishingiz yoki menyuga qaytishingiz mumkin."
+        ),
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
+    return ASK_FEEDBACK
+
+
+# ✅ Fikrni saqlash (DB)
+async def save_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    text = (update.message.text or "").strip()
+
+    add_feedback(
+        user_id=user.id,
+        name=f"{user.first_name or ''} {user.last_name or ''}".strip(),
+        username=user.username or "",
+        text=text
+    )
+
+    await update.message.reply_text("✅ Fikringiz uchun rahmat!")
+
+    keyboard = [[InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home")]]
+    await update.message.reply_text(
+        "Yana nimadir qilishni istaysizmi?",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    return ConversationHandler.END
+
+
+# 🚫 Bekor qilish
+async def cancel_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = [[InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home")]]
+    await query.edit_message_text(
+        "❌ Fikr bildirish bekor qilindi.\n\nQuyidagi tugma orqali asosiy menyuga qaytishingiz mumkin:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    return ConversationHandler.END
