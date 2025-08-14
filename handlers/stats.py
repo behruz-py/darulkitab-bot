@@ -1,25 +1,54 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
-from utils import is_admin
+from storage import get_users, get_book_views, get_books
 
 
-async def back_to_home(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def show_stats_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    keyboard = [
+        [InlineKeyboardButton("👥 Foydalanuvchilar soni", callback_data="stat_users")],
+        [InlineKeyboardButton("📖 Kitoblar statistikasi", callback_data="stat_books")],
+        [InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home")]
+    ]
+    await query.edit_message_text("📊 Statistika menyusi:", reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+async def show_user_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    count = len(get_users())
+    keyboard = [[
+        InlineKeyboardButton("🔙 Ortga", callback_data="stats"),
+        InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home")
+    ]]
+    await query.edit_message_text(
+        text=f"👥 Botdan foydalanuvchilar soni: <b>{count}</b> ta",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="HTML"
+    )
+
+
+async def show_book_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
-    keyboard = [
-        [InlineKeyboardButton("📚 Kitoblar", callback_data='books')],
-        [InlineKeyboardButton("🏷 Janrlar", callback_data='genres')],
-        [InlineKeyboardButton("📊 Statistika", callback_data='stats')],
-        [InlineKeyboardButton("💬 Fikr bildirish", callback_data='feedback')],
-        [InlineKeyboardButton("👤 Admin bilan bog‘lanish", callback_data='admin_contact')],
-    ]
-    # <<< MUHIM: home menyuda ham admin panel tugmasini shartli ko'rsatamiz
-    if is_admin(user_id):
-        keyboard.append([InlineKeyboardButton("🛠️ Admin panel", callback_data="admin_panel")])
+    views = {row["book_name"]: row["count"] for row in get_book_views()}
+    books = get_books()
+    titles = {b["nomi"] for b in books}
 
-    await query.edit_message_text(
-        text="🏠 Asosiy menyuga xush kelibsiz!",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    filtered = {t: c for t, c in views.items() if t in titles}
+    if not filtered:
+        text = "📚 Hali statistik ma’lumot yo‘q yoki mavjud kitoblarga tegishli emas.\n\n" \
+               "ℹ️ Statistika kitob qismlar ro‘yxatini ochganingizda yangilanadi."
+    else:
+        sorted_stats = sorted(filtered.items(), key=lambda x: x[1], reverse=True)
+        text = "📖 Kitoblar bo‘yicha statistika:\n\n"
+        for name, cnt in sorted_stats:
+            text += f"• <b>{name}</b>: {cnt} marta ochilgan\n"
+
+    keyboard = [[
+        InlineKeyboardButton("🔙 Ortga", callback_data="stats"),
+        InlineKeyboardButton("🏠 Asosiy menyu", callback_data="home")
+    ]]
+    await query.edit_message_text(text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="HTML")

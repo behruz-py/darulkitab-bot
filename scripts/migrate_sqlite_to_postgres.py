@@ -1,273 +1,332 @@
-"""
-One-time migration: copy data from local SQLite (data/app.db) to PostgreSQL (DATABASE_URL).
+from __future__ import annotations
 
-How to run (Windows PowerShell):
-  1) pip install -r requirements.txt
-  2) $env:DATABASE_URL = 'postgresql://USER:PASSWORD@HOST:PORT/DB?sslmode=require'
-  3) python scripts/migrate_sqlite_to_postgres.py
-"""
-
-import os
+from pathlib import Path
 import sys
-import sqlite3
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # project root ni import yo'liga qo'shish
+
+import json
+import os
+import shutil
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
-import psycopg
-from psycopg.rows import dict_row
+# Loyiha ildizidan ishga tushiriladi deb faraz qilamiz
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = BASE_DIR / "data"
+BACKUP_DIR = DATA_DIR / "backups"
+DB_FILE = DATA_DIR / "app.db"
 
-# --- Ensure project root is importable so we can import storage.init_db() ---
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# storage dagi CRUD funksiyalar
 
-SQLITE_PATH = ROOT / "data" / "app.db"
-PG_DSN = os.getenv("DATABASE_URL")
+from storage import (
+    init_db,
+    add_book,
+    get_books,
+    add_part,
+    get_parts,
+    add_user,
+    add_admin,
+    add_feedback,
+    increment_book_view,
+)
 
 
-def ensure_schema_with_storage():
-    """Try to create schema via storage.init_db() if storage is available."""
+# ---------- Yordamchi funksiyalar ----------
+
+def ts() -> str:
+    return datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+def safe_read_json(path: Path, default: Any) -> Any:
+    if not path.exists():
+        return default
     try:
-        from storage import init_db  # type: ignore
-        init_db()
-        print("Schema created via storage.init_db().")
-        return True
-    except Exception as e:
-        print("Warning: storage.init_db() unavailable, falling back to local DDL. Reason:", e)
-        return False
-
-
-def ensure_schema_with_fallback(conn: psycopg.Connection):
-    """Create tables and indexes directly (fallback if storage not importable)."""
-    ddl = [
-        # Books
-        """
-        CREATE TABLE IF NOT EXISTS books (
-            id TEXT PRIMARY KEY,
-            nomi TEXT NOT NULL
-        );
-        """,
-        # Parts (audio chapters)
-        """
-        CREATE TABLE IF NOT EXISTS parts (
-            id SERIAL PRIMARY KEY,
-            book_id TEXT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-            nomi TEXT NOT NULL,
-            audio_url TEXT NOT NULL
-        );
-        """,
-        # Genres and M2M link
-        """
-        CREATE TABLE IF NOT EXISTS genres (
-            id SERIAL PRIMARY KEY,
-            nomi TEXT UNIQUE NOT NULL
-        );
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS book_genres (
-            book_id TEXT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-            genre_id INTEGER NOT NULL REFERENCES genres(id) ON DELETE CASCADE,
-            PRIMARY KEY (book_id, genre_id)
-        );
-        """,
-        # Users & Admins
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id BIGINT PRIMARY KEY,
-            name TEXT
-        );
-        """,
-        """
-        CREATE TABLE IF NOT EXISTS admins (
-            id BIGINT PRIMARY KEY,
-            name TEXT
-        );
-        """,
-        # Feedback
-        """
-        CREATE TABLE IF NOT EXISTS feedback (
-            id BIGINT,               -- user_id
-            name TEXT,
-            username TEXT,
-            text TEXT,
-            created_at TIMESTAMPTZ
-        );
-        """,
-        # Book views
-        """
-        CREATE TABLE IF NOT EXISTS book_views (
-            book_name TEXT PRIMARY KEY,
-            count INTEGER NOT NULL DEFAULT 0
-        );
-        """,
-        # Helpful index
-        "CREATE INDEX IF NOT EXISTS idx_feedback_user_text ON feedback (id, text);",
-    ]
-    with conn.cursor() as cur:
-        for stmt in ddl:
-            cur.execute(stmt)
-    print("Schema created via fallback DDL.")
-
-
-def try_parse_dt(value):
-    """Try to parse various datetime string formats; return datetime or None."""
-    if not value:
-        return None
-    if isinstance(value, datetime):
-        return value
-    txt = str(value).strip()
-    for fmt in (
-        "%Y-%m-%d %H:%M:%S%z",
-        "%Y-%m-%d %H:%M:%S.%f%z",
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d %H:%M:%S.%f",
-        "%Y-%m-%dT%H:%M:%S%z",
-        "%Y-%m-%dT%H:%M:%S.%f%z",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%dT%H:%M:%S.%f",
-    ):
-        try:
-            return datetime.strptime(txt, fmt)
-        except Exception:
-            pass
-    try:
-        return datetime.fromisoformat(txt)
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception:
-        return None
+        return default
 
 
-def _bump_seq(conn: psycopg.Connection, table: str, col: str = "id"):
+def backup_file(path: Path) -> None:
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        dest = BACKUP_DIR / f"{path.name}.{ts()}.bak"
+        shutil.copy2(path, dest)
+
+
+def ensure_data_dir():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def index_books_by_id() -> Dict[str, dict]:
+    """DB dagi books ni id->row ko'rinishida qaytaradi."""
+    rows = get_books()
+    return {row["id"]: row for row in rows}
+
+
+def index_parts_by_book(book_id: str) -> Dict[Tuple[str, str], dict]:
+    """(nomi, audio_url) bo'yicha indeks — dublikatni oldini olish uchun."""
+    rows = get_parts(book_id)
+    return {(row["nomi"], row["audio_url"]): row for row in rows}
+
+
+# ---------- Migratsiya bosqichlari ----------
+
+def migrate_books_and_parts() -> Tuple[int, int, int, int]:
     """
-    Robust sequence bump:
-    - If table has rows: setval(seq, MAX(id), true)  -> nextval = MAX+1
-    - If empty:         setval(seq, 1, false)       -> nextval = 1
+    data/books.json dan:
+    {
+      "kitoblar": [
+        {
+          "id": "1",
+          "nomi": "Kitob nomi",
+          "qismlar": [
+            {"nomi": "1-qism", "audio_url": "https://t.me/kanal/123"},
+            ...
+          ]
+        },
+        ...
+      ]
+    }
     """
-    with conn.cursor() as cur:
-        cur.execute(f"SELECT MAX({col}) AS max_id FROM {table};")
-        row = cur.fetchone()
-        max_id = row["max_id"] if isinstance(row, dict) else row[0]
+    books_json = safe_read_json(DATA_DIR / "books.json", default={})
+    all_books = books_json.get("kitoblar", [])
+    if not isinstance(all_books, list):
+        all_books = []
 
-        cur.execute("SELECT pg_get_serial_sequence(%s, %s) AS seq_name;", (table, col))
-        row = cur.fetchone()
-        seq = row["seq_name"] if isinstance(row, dict) else row[0]
-        if not seq:
-            return  # no serial/bigserial sequence
+    # Backup qilamiz (asliga tegmaydi)
+    backup_file(DATA_DIR / "books.json")
 
-        if max_id is None or int(max_id) < 1:
-            # empty table -> start from 1 (uncalled)
-            cur.execute("SELECT setval(%s, %s, %s);", (seq, 1, False))
+    existed_books = index_books_by_id()
+
+    added_books = 0
+    skipped_books = 0
+    added_parts = 0
+    skipped_parts = 0
+
+    for b in all_books:
+        book_id = str(b.get("id") or "").strip()
+        nomi = str(b.get("nomi") or "").strip()
+
+        if not book_id or not nomi:
+            # invalid yozuv — tashlab ketamiz
+            skipped_books += 1
+            continue
+
+        if book_id in existed_books:
+            skipped_books += 1
         else:
-            cur.execute("SELECT setval(%s, %s, %s);", (seq, int(max_id), True))
+            try:
+                add_book(book_id, nomi)
+                added_books += 1
+            except Exception:
+                # ehtimol parallel ishga tushirishda poyga — tashlab ketamiz
+                skipped_books += 1
+
+        # Qismlar
+        parts = b.get("qismlar", [])
+        if isinstance(parts, list):
+            # dublikatni oldini olish uchun mavjudlarni indekslaymiz
+            existing_map = index_parts_by_book(book_id)
+            for p in parts:
+                p_nomi = str(p.get("nomi") or "").strip()
+                p_url = str(p.get("audio_url") or "").strip()
+                key = (p_nomi, p_url)
+                if not p_nomi or not p_url:
+                    skipped_parts += 1
+                    continue
+                if key in existing_map:
+                    skipped_parts += 1
+                    continue
+                try:
+                    add_part(book_id, p_nomi, p_url)
+                    added_parts += 1
+                except Exception:
+                    skipped_parts += 1
+
+    return added_books, skipped_books, added_parts, skipped_parts
 
 
-def fix_sequences(conn: psycopg.Connection):
-    """Fix sequences for tables with SERIAL ids after explicit inserts."""
-    _bump_seq(conn, "parts", "id")
-    _bump_seq(conn, "genres", "id")
-    print("Sequences fixed (parts.id, genres.id).")
+def migrate_book_views() -> Tuple[int, int]:
+    """
+    data/book_views.json dan:
+    {
+      "Kitob nomi": 12,
+      ...
+    }
+    """
+    views_json = safe_read_json(DATA_DIR / "book_views.json", default={})
+    if not isinstance(views_json, dict):
+        views_json = {}
+
+    backup_file(DATA_DIR / "book_views.json")
+
+    added = 0
+    skipped = 0
+    for book_name, count in views_json.items():
+        try:
+            cnt = int(count)
+        except Exception:
+            skipped += 1
+            continue
+        if not book_name:
+            skipped += 1
+            continue
+        try:
+            # count marta increment qilamiz (kichik son bo'lsa ok; juda katta bo'lsa sekinlashishi mumkin)
+            for _ in range(cnt):
+                increment_book_view(book_name)
+            added += 1
+        except Exception:
+            skipped += 1
+
+    return added, skipped
+
+
+def migrate_users() -> Tuple[int, int]:
+    """
+    data/users.json — ko‘rganlaridan kelib chiqib:
+    {
+      "8027031316": {"id": 8027031316, "name": "Behruz"},
+      ...
+    }
+    yoki ba'zan shunchaki dict bo‘lishi mumkin.
+    """
+    users_json = safe_read_json(DATA_DIR / "users.json", default={})
+    if not isinstance(users_json, dict):
+        users_json = {}
+
+    backup_file(DATA_DIR / "users.json")
+
+    added = 0
+    skipped = 0
+    for key, val in users_json.items():
+        try:
+            if isinstance(val, dict):
+                uid = int(val.get("id") or key)
+                name = str(val.get("name") or "")[:255]
+            else:
+                uid = int(key)
+                name = str(val)[:255]
+            if uid <= 0:
+                skipped += 1
+                continue
+            try:
+                add_user(uid, name)
+                added += 1
+            except Exception:
+                # PK bor — demak avvaldan mavjud
+                skipped += 1
+        except Exception:
+            skipped += 1
+
+    return added, skipped
+
+
+def migrate_admins() -> Tuple[int, int]:
+    """
+    data/admins.json — admin_manage.py’dagi load_admins() formatiga mos:
+    {
+      "8027031316": {"id": 8027031316, "name": "Behruz"},
+      ...
+    }
+    """
+    admins_json = safe_read_json(DATA_DIR / "admins.json", default={})
+    if not isinstance(admins_json, dict):
+        admins_json = {}
+
+    backup_file(DATA_DIR / "admins.json")
+
+    added = 0
+    skipped = 0
+    for key, val in admins_json.items():
+        try:
+            if isinstance(val, dict):
+                aid = int(val.get("id") or key)
+                name = str(val.get("name") or "")[:255]
+            else:
+                aid = int(key)
+                name = str(val)[:255]
+            if aid <= 0:
+                skipped += 1
+                continue
+            try:
+                add_admin(aid, name)
+                added += 1
+            except Exception:
+                skipped += 1
+        except Exception:
+            skipped += 1
+
+    return added, skipped
+
+
+def migrate_feedback() -> Tuple[int, int]:
+    """
+    data/feedback.json:
+    [
+      {"id": 123, "name": "...", "username": "...", "text": "..."},
+      ...
+    ]
+    """
+    feedback_json = safe_read_json(DATA_DIR / "feedback.json", default=[])
+    if not isinstance(feedback_json, list):
+        feedback_json = []
+
+    backup_file(DATA_DIR / "feedback.json")
+
+    added = 0
+    skipped = 0
+    for fb in feedback_json:
+        try:
+            uid = int(fb.get("id"))
+            name = str(fb.get("name") or "")[:255]
+            username = str(fb.get("username") or "")[:255]
+            text = str(fb.get("text") or "")
+            if not text:
+                skipped += 1
+                continue
+            try:
+                add_feedback(uid, name, username, text)
+                added += 1
+            except Exception:
+                skipped += 1
+        except Exception:
+            skipped += 1
+
+    return added, skipped
 
 
 def main():
-    if not PG_DSN:
-        raise SystemExit("DATABASE_URL env var is required.")
+    print("➡️  Migratsiya boshlandi...")
+    ensure_data_dir()
 
-    if not SQLITE_PATH.exists():
-        raise SystemExit(f"SQLite file not found: {SQLITE_PATH}")
+    # DB tayyorlab olamiz
+    print("ℹ️  DB init (tables, pragmas)...")
+    init_db()
+    if not DB_FILE.exists():
+        print("❌ DB fayli yaratilmagan ko‘rinadi (data/app.db yo‘q). storage.init_db() ni tekshiring.")
+        return
 
-    # Open SQLite (row factory to dict-like)
-    sconn = sqlite3.connect(str(SQLITE_PATH))
-    sconn.row_factory = sqlite3.Row
+    # Har bir blokni alohida migratsiya qilamiz
+    b_add, b_skip, p_add, p_skip = migrate_books_and_parts()
+    print(f"📚 Books: +{b_add}, skip {b_skip} | 🎧 Parts: +{p_add}, skip {p_skip}")
 
-    # Open Postgres
-    pconn = psycopg.connect(PG_DSN, autocommit=True)
-    pconn.row_factory = dict_row
+    v_add, v_skip = migrate_book_views()
+    print(f"📊 Book views: +{v_add}, skip {v_skip}")
 
-    try:
-        # Ensure schema
-        if not ensure_schema_with_storage():
-            ensure_schema_with_fallback(pconn)
+    u_add, u_skip = migrate_users()
+    print(f"👥 Users: +{u_add}, skip {u_skip}")
 
-        sc = sconn.cursor()
-        pc = pconn.cursor()
+    a_add, a_skip = migrate_admins()
+    print(f"👮 Admins: +{a_add}, skip {a_skip}")
 
-        # --- books ---
-        for r in sc.execute("SELECT id, nomi FROM books"):
-            pc.execute(
-                "INSERT INTO books (id, nomi) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING;",
-                (r["id"], r["nomi"])
-            )
-        print("✔ books migrated.")
+    f_add, f_skip = migrate_feedback()
+    print(f"💬 Feedback: +{f_add}, skip {f_skip}")
 
-        # --- parts ---
-        for r in sc.execute("SELECT id, book_id, nomi, audio_url FROM parts ORDER BY id"):
-            pc.execute(
-                "INSERT INTO parts (id, book_id, nomi, audio_url) VALUES (%s, %s, %s, %s) "
-                "ON CONFLICT (id) DO NOTHING;",
-                (r["id"], r["book_id"], r["nomi"], r["audio_url"])
-            )
-        print("✔ parts migrated.")
-
-        # --- genres ---
-        for r in sc.execute("SELECT id, nomi FROM genres"):
-            pc.execute(
-                "INSERT INTO genres (id, nomi) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING;",
-                (r["id"], r["nomi"])
-            )
-        print("✔ genres migrated.")
-
-        # --- book_genres ---
-        for r in sc.execute("SELECT book_id, genre_id FROM book_genres"):
-            pc.execute(
-                "INSERT INTO book_genres (book_id, genre_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
-                (r["book_id"], r["genre_id"])
-            )
-        print("✔ book_genres migrated.")
-
-        # --- users ---
-        for r in sc.execute("SELECT id, name FROM users"):
-            pc.execute(
-                "INSERT INTO users (id, name) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING;",
-                (r["id"], r["name"])
-            )
-        print("✔ users migrated.")
-
-        # --- admins ---
-        for r in sc.execute("SELECT id, name FROM admins"):
-            pc.execute(
-                "INSERT INTO admins (id, name) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING;",
-                (r["id"], r["name"])
-            )
-        print("✔ admins migrated.")
-
-        # --- feedback ---
-        for r in sc.execute("SELECT id, name, username, text, created_at FROM feedback"):
-            dt = try_parse_dt(r["created_at"])
-            if dt is None:
-                dt = datetime.utcnow()
-            pc.execute(
-                "INSERT INTO feedback (id, name, username, text, created_at) VALUES (%s, %s, %s, %s, %s);",
-                (r["id"], r["name"], r["username"], r["text"], dt)
-            )
-        print("✔ feedback migrated.")
-
-        # --- book_views ---
-        for r in sc.execute("SELECT book_name, count FROM book_views"):
-            pc.execute(
-                "INSERT INTO book_views (book_name, count) VALUES (%s, %s) "
-                "ON CONFLICT (book_name) DO UPDATE SET count = EXCLUDED.count;",
-                (r["book_name"], r["count"])
-            )
-        print("✔ book_views migrated.")
-
-        fix_sequences(pconn)
-
-        sc.close()
-        pc.close()
-
-        print("✅ Migration finished successfully.")
-    finally:
-        sconn.close()
-        pconn.close()
+    print("✅ Migratsiya yakunlandi.")
 
 
 if __name__ == "__main__":
